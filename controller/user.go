@@ -26,6 +26,10 @@ func (uc userController) Create(ctx echo.Context) error {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
 
+	if err := ctx.Validate(req); err != nil {
+		return err
+	}
+
 	u := toModel(req)
 	uc.u.Create(ctx.Request().Context(), u)
 	return nil
