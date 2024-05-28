@@ -1,10 +1,13 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"github.com/radish-miyazaki/sluck/infra"
 
 	"github.com/radish-miyazaki/sluck/controller"
 	"github.com/radish-miyazaki/sluck/repository"
@@ -24,10 +27,21 @@ func (cv *CustomValidator) Validate(i any) error {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	e := echo.New()
 	e.Validator = &CustomValidator{validator.New()}
 
-	ur := repository.UserRepository(nil)
+	db, err := infra.Connect()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	ur := repository.NewUserRepository(db)
 	uu := usecase.NewUserUsecase(ur)
 	uc := controller.NewUserController(uu)
 	e.POST("/users", uc.Create)
