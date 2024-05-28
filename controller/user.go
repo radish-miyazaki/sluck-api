@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"fmt"
+	"net/http"
 
 	"github.com/labstack/echo/v4"
 
@@ -20,7 +20,13 @@ func NewUserController(u usecase.UserUsecase) UserController {
 	return &userController{u}
 }
 
-func (u userController) Create(ctx echo.Context) error {
-	fmt.Println("creating ...")
+func (uc userController) Create(ctx echo.Context) error {
+	var req UserRequest
+	if err := ctx.Bind(&req); err != nil {
+		return ctx.JSON(http.StatusBadRequest, err)
+	}
+
+	u := toModel(req)
+	uc.u.Create(ctx.Request().Context(), u)
 	return nil
 }
