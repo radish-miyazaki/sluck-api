@@ -44,7 +44,10 @@ func main() {
 	ur := repository.NewUserRepository(db)
 	uu := usecase.NewUserUsecase(ur)
 	uc := controller.NewUserController(uu)
+	e.GET("/users/:id", uc.Get)
 	e.POST("/users", uc.Create)
+	e.PUT("/users", uc.Update)
+	e.DELETE("/users/:id", uc.Delete)
 
 	e.Start(":8080")
 }
