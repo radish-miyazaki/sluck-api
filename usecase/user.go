@@ -15,23 +15,32 @@ type UserUsecase interface {
 }
 
 type userUsecase struct {
-	r repository.UserRepository
+	ur repository.UserRepository
+	mr repository.MessageRepository
 }
 
-func NewUserUsecase(r repository.UserRepository) UserUsecase {
-	return &userUsecase{r}
+func NewUserUsecase(ur repository.UserRepository, mr repository.MessageRepository) UserUsecase {
+	return &userUsecase{ur, mr}
 }
 
 func (u userUsecase) Delete(ctx context.Context, id string) error {
-	return u.r.Delete(ctx, id)
+	if err := u.ur.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	if err := u.mr.DeleteByUserID(ctx, id); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u userUsecase) Update(ctx context.Context, user *model.User) error {
-	return u.r.Update(ctx, user)
+	return u.ur.Update(ctx, user)
 }
 
 func (u userUsecase) GetByID(ctx context.Context, id string) (*model.User, error) {
-	user, err := u.r.Read(ctx, id)
+	user, err := u.ur.Read(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +48,7 @@ func (u userUsecase) GetByID(ctx context.Context, id string) (*model.User, error
 }
 
 func (u userUsecase) Create(ctx context.Context, user *model.User) (string, error) {
-	id, err := u.r.Create(ctx, user)
+	id, err := u.ur.Create(ctx, user)
 	if err != nil {
 		return "", err
 	}
