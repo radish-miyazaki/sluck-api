@@ -5,6 +5,7 @@ import (
 
 	"github.com/radish-miyazaki/sluck/model"
 	"github.com/radish-miyazaki/sluck/repository"
+	"github.com/radish-miyazaki/sluck/transaction"
 )
 
 type UserUsecase interface {
@@ -17,18 +18,25 @@ type UserUsecase interface {
 type userUsecase struct {
 	ur repository.UserRepository
 	mr repository.MessageRepository
+	tx transaction.Transaction
 }
 
-func NewUserUsecase(ur repository.UserRepository, mr repository.MessageRepository) UserUsecase {
-	return &userUsecase{ur, mr}
+func NewUserUsecase(ur repository.UserRepository, mr repository.MessageRepository, tx transaction.Transaction) UserUsecase {
+	return &userUsecase{ur, mr, tx}
 }
 
 func (u userUsecase) Delete(ctx context.Context, id string) error {
-	if err := u.ur.Delete(ctx, id); err != nil {
-		return err
-	}
+	if _, err := u.tx.DoInTx(ctx, func(ctx context.Context) (any, error) {
+		if err := u.ur.Delete(ctx, id); err != nil {
+			return nil, err
+		}
 
-	if err := u.mr.DeleteByUserID(ctx, id); err != nil {
+		if err := u.mr.DeleteByUserID(ctx, id); err != nil {
+			return nil, err
+		}
+
+		return nil, nil
+	}); err != nil {
 		return err
 	}
 

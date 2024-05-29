@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/radish-miyazaki/sluck/infra"
+	"github.com/radish-miyazaki/sluck/transaction"
 
 	"github.com/radish-miyazaki/sluck/controller"
 	"github.com/radish-miyazaki/sluck/repository"
@@ -43,7 +44,8 @@ func main() {
 
 	ur := repository.NewUserRepository(db)
 	mr := repository.NewMessageRepository(db)
-	uu := usecase.NewUserUsecase(ur, mr)
+	tx := transaction.NewTransaction(db)
+	uu := usecase.NewUserUsecase(ur, mr, tx)
 	uc := controller.NewUserController(uu)
 	e.GET("/users/:id", uc.Get)
 	e.POST("/users", uc.Create)

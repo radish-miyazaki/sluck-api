@@ -18,7 +18,13 @@ func NewMessageRepository(db *sql.DB) MessageRepository {
 }
 
 func (m messageRepository) DeleteByUserID(ctx context.Context, userID string) error {
-	_, err := m.db.ExecContext(ctx, "DELETE FROM messages WHERE user_id = ?", userID)
+	var db Executor
+	db, ok := GetTx(ctx)
+	if !ok {
+		db = m.db
+	}
+
+	_, err := db.ExecContext(ctx, "DELETE FROM messages WHERE user_id = ?", userID)
 	if err != nil {
 		return err
 	}

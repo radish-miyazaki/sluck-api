@@ -58,7 +58,13 @@ func (u userRepository) Update(ctx context.Context, user *model.User) error {
 }
 
 func (u userRepository) Delete(ctx context.Context, id string) error {
-	result, err := u.db.ExecContext(ctx, "DELETE FROM users WHERE id = ?", id)
+	var db Executor
+	db, ok := GetTx(ctx)
+	if !ok {
+		db = u.db
+	}
+
+	result, err := db.ExecContext(ctx, "DELETE FROM users WHERE id = ?", id)
 	if err != nil {
 		return err
 	}
